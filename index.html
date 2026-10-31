@@ -348,6 +348,65 @@
         // Первичная отрисовка
         updateUI();
     </script>
+            // ... здесь заканчивается прошлый код кликера (функции кликов и таймер энергии) ...
+        
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + 1);
+                updateUI();
+            }
+        }, 1000);
+
+        updateUI();
+
+
+        // === ВСТАВЛЯЙТЕ СЮДА (МЕЖДУ СТАРЫМ КОДОМ И ЗАКРЫВАЮЩИМ </script>) ===
+
+        const navButtons = document.querySelectorAll('.nav-item');
+        const tabs = {
+            0: 'tab-game',
+            1: 'tab-mini-games',
+            2: 'tab-upgrades',
+            3: 'tab-status'
+        };
+
+        function switchTab(activeIndex) {
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            if (navButtons[activeIndex]) {
+                navButtons[activeIndex].classList.add('active');
+            }
+
+            document.getElementById('tab-game').style.display = 'none';
+            document.getElementById('tab-mini-games').style.display = 'none';
+            document.getElementById('tab-upgrades').style.display = 'none';
+            
+            const statusTab = document.getElementById('tab-status');
+            if (statusTab) statusTab.style.display = 'none';
+
+            const targetTabId = tabs[activeIndex];
+            const targetTab = document.getElementById(targetTabId);
+            
+            if (targetTab) {
+                targetTab.style.display = 'flex';
+            }
+        }
+
+        navButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                switchTab(index);
+            });
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                switchTab(index);
+            }, { passive: false });
+        });
+
+        switchTab(0);
+
+    </script>
+</body>
+</html>
+
 </body>
 
 
