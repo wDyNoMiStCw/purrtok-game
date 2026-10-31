@@ -15,6 +15,7 @@
             -webkit-tap-highlight-color: transparent; 
             outline: none;
         }
+
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #0f0c1b, #201335);
@@ -27,6 +28,7 @@
             justify-content: space-between;
             padding: 20px 10px;
         }
+
         .header {
             width: 100%;
             max-width: 400px;
@@ -38,6 +40,7 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
+
         .title {
             font-size: 14px;
             text-transform: uppercase;
@@ -46,6 +49,7 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
+
         .balance-container {
             display: flex;
             align-items: center;
@@ -53,16 +57,19 @@
             gap: 10px;
             margin-bottom: 12px;
         }
+
         .balance-icon {
             font-size: 28px;
             animation: pulse 2s infinite;
         }
+
         .balance-text {
             font-size: 32px;
             font-weight: 800;
             color: #ffd700;
             text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
         }
+
         .energy-bar-container {
             width: 100%;
             background: rgba(255, 255, 255, 0.1);
@@ -72,6 +79,7 @@
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+
         .energy-bar {
             width: 100%;
             height: 100%;
@@ -79,6 +87,7 @@
             box-shadow: 0 0 10px #ff416c;
             transition: width 0.1s ease;
         }
+
         .energy-text {
             font-size: 11px;
             color: #ff9a9e;
@@ -86,6 +95,7 @@
             font-weight: 600;
             text-align: right;
         }
+
         .clicker-container {
             position: relative;
             display: flex;
@@ -94,6 +104,7 @@
             flex-grow: 1;
             width: 100%;
         }
+
         .circle-button {
             width: 220px;
             height: 220px;
@@ -109,16 +120,19 @@
             transition: transform 0.05s ease;
             touch-action: manipulation;
         }
+
         .circle-button:active {
             transform: scale(0.94);
             border-color: #c2a3ff;
             box-shadow: 0 0 50px rgba(194, 163, 255, 0.7), inset 0 0 35px rgba(194, 163, 255, 0.5);
         }
+
         .paw-inner-icon {
             font-size: 90px;
             pointer-events: none;
             filter: drop-shadow(0 0 10px rgba(157, 111, 255, 0.6));
         }
+
         .floating-text {
             position: absolute;
             font-size: 28px;
@@ -129,6 +143,7 @@
             animation: floatUp 0.6s ease-out forwards;
             z-index: 100;
         }
+
         .content-panel {
             width: 100%;
             max-width: 400px;
@@ -142,6 +157,7 @@
             height: 250px;
             overflow-y: auto;
         }
+
         .panel-title {
             font-size: 16px;
             font-weight: bold;
@@ -150,6 +166,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 5px;
         }
+
         .roulette-btn {
             background: linear-gradient(90deg, #8a2be2, #4a00e0);
             border: none;
@@ -164,6 +181,7 @@
             transition: transform 0.2s;
             width: 100%;
         }
+
         .navbar {
             width: 100%;
             max-width: 400px;
@@ -176,6 +194,7 @@
             backdrop-filter: blur(15px);
             box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
         }
+
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -192,18 +211,22 @@
             transition: all 0.2s ease;
             flex: 1;
         }
+
         .nav-item.active {
             color: #ffffff;
             background: rgba(127, 86, 218, 0.25);
             box-shadow: inset 0 0 10px rgba(127, 86, 218, 0.2);
         }
+
         .nav-icon {
             font-size: 20px;
         }
+
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
             100% { transform: translateY(-120px) scale(0.8); opacity: 0; }
         }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -262,155 +285,125 @@
         <button id="btn-wallet" class="nav-item" onclick="switchTab('wallet')"> <span class="nav-icon">🏆</span> <span>Статус</span> </button>
     </div>
 
-    <!-- Загружаем звуки со стока ZvukiPro напрямую во избежание багов путей -->
     <audio id="audioClick" src="https://zvukipro.com" preload="auto"></audio>
     <audio id="audioCrash" src="https://zvukipro.com" preload="auto"></audio>
 
     <script>
-    if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-    }
-    
-    let balance = 0;
-    let energy = 100;
-    const maxEnergy = 100;
-    
-    const balanceEl = document.getElementById('balance');
-    const energyBarEl = document.getElementById('energyBar');
-    const energyTextEl = document.getElementById('energyText');
-    const clickButton = document.getElementById('clickButton');
-    const audioClick = document.getElementById('audioClick');
-    const audioCrash = document.getElementById('audioCrash');
-    
-    // Разблокировка звукового движка при первом тапе
-    document.body.addEventListener('click', () => {
-        audioClick.play().then(() => { audioClick.pause(); }).catch(e => console.log(e));
-        audioCrash.play().then(() => { audioCrash.pause(); }).catch(e => console.log(e));
-    }, { once: true });
-    
-    clickButton.addEventListener('click', (e) => {
-        if (energy <= 0) {
-            alert('Кот устал!');
-            return;
-        }
-    
-        balance += 10;
-        energy -= 1;
-        balanceEl.textContent = balance;
-        updateEnergyBar();
-    
-        audioClick.currentTime = 0;
-        audioClick.play().catch(err => console.log("Звук ждет клика"));
-    
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-        }
-    
-        createFloatingText(e);
-    });
-    
-    function updateEnergyBar() {
-        const percentage = (energy / maxEnergy) * 100;
-        energyBarEl.style.width = percentage + '%';
-        energyTextEl.textContent = `Ярость кота: ${energy}/${maxEnergy}`;
-    }
-    
-    function createFloatingText(e) {
-        const floating = document.createElement('div');
-        floating.className = 'floating-text';
-        floating.textContent = '+10';
-    
-        let x, y;
-        if (e.changedTouches && e.changedTouches.length > 0) {
-            x = e.changedTouches[0].clientX;
-            y = e.changedTouches[0].clientY;
-        } else {
-            x = e.clientX || window.innerWidth / 2;
-            y = e.clientY || window.innerHeight / 2;
-        }
-    
-        floating.style.left = (x - 20) + 'px';
-        floating.style.top = (y - 30) + 'px';
-        document.body.appendChild(floating);
-    
-        setTimeout(() => { floating.remove(); }, 600);
-    }
-    
-    // ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ФУНКЦИЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК БЕЗ ИСПОЛЬЗОВАНИЯ EVENT
-    function switchTab(tabId) {
-        document.getElementById('tab-game').style.display = 'none';
-        document.getElementById('tab-mini-games').style.display = 'none';
-        document.getElementById('tab-upgrades').style.display = 'none';
-        document.getElementById('tab-wallet').style.display = 'none';
-    
-        document.getElementById('btn-game').classList.remove('active');
-        document.getElementById('btn-mini-games').classList.remove('active');
-        document.getElementById('btn-upgrades').classList.remove('active');
-        document.getElementById('btn-wallet').classList.remove('active');
-    
-        if (tabId === 'game') {
-            document.getElementById('tab-game').style.display = 'flex';
-        } else {
-            document.getElementById('tab-' + tabId).style.display = 'flex';
-        }
-    
-        document.getElementById('btn-' + tabId).classList.add('active');
-    
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-        }
-    }
-    
-    const spinBtn = document.getElementById('spinBtn');
-    const rouletteResult = document.getElementById('rouletteResult');
-    
-    spinBtn.addEventListener('click', () => {
-        if (balance < 50) {
-            rouletteResult.style.color = '#ff416c';
-            rouletteResult.textContent = 'Недостаточно монет!';
-            return;
-        }
-    
-        balance -= 50;
-        balanceEl.textContent = balance;
-        rouletteResult.textContent = 'Колесо крутится... 🌀';
-    
-        setTimeout(() => {
-            const outcomes = [
+        if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+                }
+                let balance = 0;
+                let energy = 100;
+                const maxEnergy = 100;
+                const balanceEl = document.getElementById('balance');
+                const energyBarEl = document.getElementById('energyBar');
+                const energyTextEl = document.getElementById('energyText');
+                const clickButton = document.getElementById('clickButton');
+                const audioClick = document.getElementById('audioClick');
+                const audioCrash = document.getElementById('audioCrash');
+                document.body.addEventListener('click', () => {
+                audioClick.play().then(() => { audioClick.pause(); }).catch(e => console.log(e));
+                audioCrash.play().then(() => { audioCrash.pause(); }).catch(e => console.log(e));
+                }, { once: true });
+                clickButton.addEventListener('click', (e) => {
+                if (energy <= 0) {
+                alert('Кот устал!');
+                return;
+                }
+                balance += 10;
+                energy -= 1;
+                balanceEl.textContent = balance;
+                updateEnergyBar();
+                audioClick.currentTime = 0;
+                audioClick.play().catch(err => console.log("Звук ждет клика"));
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                }
+                createFloatingText(e);
+                });
+                function updateEnergyBar() {
+                const percentage = (energy / maxEnergy) * 100;
+                energyBarEl.style.width = percentage + '%';
+                energyTextEl.textContent = Ярость кота: ${energy}/${maxEnergy};
+                }
+                function createFloatingText(e) {
+                const floating = document.createElement('div');
+                floating.className = 'floating-text';
+                floating.textContent = '+10';
+                let x, y;
+                if (e.changedTouches && e.changedTouches.length > 0) {
+                x = e.changedTouches[0].clientX;
+                y = e.changedTouches[0].clientY;
+                } else {
+                x = e.clientX || window.innerWidth / 2;
+                y = e.clientY || window.innerHeight / 2;
+                }
+                floating.style.left = (x - 20) + 'px';
+                floating.style.top = (y - 30) + 'px';
+                document.body.appendChild(floating);
+                setTimeout(() => { floating.remove(); }, 600);
+                }
+                function switchTab(tabId) {
+                document.getElementById('tab-game').style.display = 'none';
+                document.getElementById('tab-mini-games').style.display = 'none';
+                document.getElementById('tab-upgrades').style.display = 'none';
+                document.getElementById('tab-wallet').style.display = 'none';
+                document.getElementById('btn-game').classList.remove('active');
+                document.getElementById('btn-mini-games').classList.remove('active');
+                document.getElementById('btn-upgrades').classList.remove('active');
+                document.getElementById('btn-wallet').classList.remove('active');
+                if (tabId === 'game') {
+                document.getElementById('tab-game').style.display = 'flex';
+                } else {
+                document.getElementById('tab-' + tabId).style.display = 'flex';
+                }
+                document.getElementById('btn-' + tabId).classList.add('active');
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                }
+                }
+                const spinBtn = document.getElementById('spinBtn');
+                const rouletteResult = document.getElementById('rouletteResult');
+                spinBtn.addEventListener('click', () => {
+                if (balance < 50) {
+                rouletteResult.style.color = '#ff416c';
+                rouletteResult.textContent = 'Недостаточно монет!';
+                return;
+                }
+                balance -= 50;
+                balanceEl.textContent = balance;
+                rouletteResult.textContent = 'Колесо крутится... 🌀';
+                setTimeout(() => {
+                const outcomes = [
                 { text: '🎰 ДЖЕКПОТ! +250 $PURR', win: 250, sound: true },
                 { text: '😼 Украл колбасу: +80 $PURR', win: 80, sound: false },
                 { text: '⚰️ Мимо! +0 $PURR', win: 0, sound: false },
                 { text: '🙀 Получил тапком: -30 $PURR', win: -30, sound: false }
-            ];
-    
-            const result = outcomes[Math.floor(Math.random() * outcomes.length)];
-            balance += result.win;
-            if (balance < 0) balance = 0;
-    
-            balanceEl.textContent = balance;
-            rouletteResult.textContent = result.text;
-    
-            if (result.sound) {
+                ];
+                const result = outcomes[Math.floor(Math.random() * outcomes.length)];
+                balance += result.win;
+                if (balance < 0) balance = 0;
+                balanceEl.textContent = balance;
+                rouletteResult.textContent = result.text;
+                if (result.sound) {
                 audioCrash.currentTime = 0;
                 audioCrash.play().catch(e => console.log(e));
-            }
-        }, 1000);
-    });
-    
-    document.getElementById('finishBtn').addEventListener('click', () => {
-        if (window.Telegram && window.Telegram.WebApp) {
-            const dataToSend = JSON.stringify({ score: balance, event: "finish_game" });
-            window.Telegram.WebApp.sendData(dataToSend);
-            window.Telegram.WebApp.close();
-        } else {
-            alert(`Вы вышли из игры. Счет: ${balance}`);
-        }
-    });
-    
-    setInterval(() => {
-        if (energy < maxEnergy) {
-            energy++;
-            updateEnergyBar();
-        }
-    }, 4000);
+                }
+                }, 1000);
+                });
+                document.getElementById('finishBtn').addEventListener('click', () => {
+                if (window.Telegram && window.Telegram.WebApp) {
+                const dataToSend = JSON.stringify({ score: balance, event: "finish_game" });
+                window.Telegram.WebApp.sendData(dataToSend);
+                window.Telegram.WebApp.close();
+                } else {
+                alert(Вы вышли из игры. Счет: ${balance});
+                }
+                });
+                setInterval(() => {
+                if (energy < maxEnergy) {
+                energy++;
+                updateEnergyBar();
+                }
+                }, 4000);
