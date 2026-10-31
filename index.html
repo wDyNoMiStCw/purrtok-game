@@ -151,7 +151,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 15px;
-            display: none;
+            display: none; 
             flex-direction: column;
             gap: 10px;
             height: 250px;
@@ -167,7 +167,7 @@
             padding-bottom: 5px;
         }
 
-        .roulette-btn {
+        .roulette-btn, .exit-btn {
             background: linear-gradient(90deg, #8a2be2, #4a00e0);
             border: none;
             color: white;
@@ -180,6 +180,11 @@
             margin-top: 10px;
             transition: transform 0.2s;
             width: 100%;
+        }
+
+        .exit-btn {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
         }
 
         .navbar {
@@ -249,35 +254,70 @@
         <div id="energyText" class="energy-text">Ярость кота: 100/100</div>
     </div>
 
+    <!-- ВКЛАДКА 0: ГЛАВНЫЙ ЭКРАН (ТЫГЫДЫК) -->
     <div id="tab-game" class="clicker-container">
         <div class="circle-button" id="clickButton">
             <span class="paw-inner-icon">🐾</span>
         </div>
     </div>
 
+    <!-- ВКЛАДКА 1: МИНИ-ИГРЫ (РУЛЕТКА) -->
     <div id="tab-mini-games" class="content-panel">
         <div class="panel-title">🎰 Кошачья Рулетка</div>
         <p style="font-size: 13px; color: #a5a1b8;">Стоимость прокрута: 50 $PURR.</p>
         <button class="roulette-btn" id="spinBtn">Крутить колесо! 🎡</button>
-        <div class="roulette-result" id="rouletteResult"></div>
+        <div id="rouletteResult" style="margin-top: 15px; font-weight: bold; text-align: center;"></div>
     </div>
 
+    <!-- ВКЛАДКА 2: МАГАЗИН АПГРЕЙДОВ -->
     <div id="tab-upgrades" class="content-panel">
         <div class="panel-title">🛒 Магазин Апгрейдов</div>
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <div style="font-weight: bold; font-size: 14px;">😼 Острые когти</div>
-                <div style="font-size: 11px; color: #8e8a9f;">+20 монет за тап.</div>
+                <div style="font-weight: bold; font-size: 14px;">Острые Когти (+1 к тапу)</div>
+                <div style="font-size: 12px; color: #8e8a9f;">Цена: <span style="color: #ffd700;">100 $PURR</span></div>
             </div>
-            <button style="background: #7f56da; border: none; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px;">150 $PURR</button>
+            <button id="upgradeBtn" style="background: #9d6fff; border: none; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Купить</button>
         </div>
     </div>
-        <script>
-        // Инициализация игровых переменных
+
+    <!-- ВКЛАДКА 3: СТАТУС -->
+    <div id="tab-status" class="content-panel">
+        <div class="panel-title">👑 Статус Экосистемы</div>
+        <p style="font-size: 14px; color: #a5a1b8; line-height: 1.4;">Вы успешно сбросили рабочий стресс! Завершите сессию Тыгыдыка, чтобы отправить итоговый счет обратно коту-психологу.</p>
+        <button class="exit-btn" id="exitWebAppBtn">Завершить Тыгыдык и Выйти 🐾</button>
+    </div>
+
+    <!-- НИЖНЕЕ МЕНЮ НАВИГАЦИИ -->
+    <div class="navbar">
+        <button class="nav-item active">
+            <span class="nav-icon">🐾</span>
+            <span>Тыгыдык</span>
+        </button>
+        <button class="nav-item">
+            <span class="nav-icon">🎮</span>
+            <span>Игры</span>
+        </button>
+        <button class="nav-item">
+            <span class="nav-icon">🛒</span>
+            <span>Апгрейды</span>
+        </button>
+        <button class="nav-item">
+        <span class="nav-icon">🏅</span>
+        <span>Статус</span>
+    </button>
+
+    
+    <script>
+        // Инициализация Telegram WebApp API
+        const tg = window.Telegram?.WebApp;
+        if (tg) tg.expand(); 
+
+        // Игровые переменные
         let balance = 0;
         let energy = 100;
         const maxEnergy = 100;
-        const clickValue = 1;
+        let clickValue = 1;
 
         // Поиск DOM-элементов
         const balanceEl = document.getElementById('balance');
@@ -285,8 +325,22 @@
         const energyTextEl = document.getElementById('energyText');
         const clickButton = document.getElementById('clickButton');
         const gameContainer = document.getElementById('tab-game');
+        
+        const navButtons = document.querySelectorAll('.nav-item');
+        const spinBtn = document.getElementById('spinBtn');
+        const rouletteResult = document.getElementById('rouletteResult');
+        const upgradeBtn = document.getElementById('upgradeBtn');
+        const exitWebAppBtn = document.getElementById('exitWebAppBtn');
 
-        // Функция обновления UI
+        // Карта соответствия вкладок меню их ID в HTML
+        const tabs = {
+            0: 'tab-game',
+            1: 'tab-mini-games',
+            2: 'tab-upgrades',
+            3: 'tab-status'
+        };
+
+        // Обновление интерфейса
         function updateUI() {
             balanceEl.textContent = balance;
             const energyPercent = (energy / maxEnergy) * 100;
@@ -294,20 +348,18 @@
             energyTextEl.textContent = `Ярость кота: ${energy}/${maxEnergy}`;
         }
 
-        // Логика обработки клика
+        // Логика взаимодействия с лапкой (клик/тап)
         function handleInteraction(clientX, clientY) {
             if (energy >= clickValue) {
-                // Изменение состояния
                 balance += clickValue;
                 energy -= clickValue;
                 updateUI();
 
-                // Создание вылетающего текста +1
+                // Создаем и анимируем всплывающую цифру
                 const floatingText = document.createElement('div');
                 floatingText.className = 'floating-text';
                 floatingText.textContent = `+${clickValue}`;
                 
-                // Расчет координат появления цифры относительно контейнера
                 const rect = gameContainer.getBoundingClientRect();
                 const x = clientX - rect.left;
                 const y = clientY - rect.top;
@@ -317,230 +369,113 @@
 
                 gameContainer.appendChild(floatingText);
 
-                // Удаление элемента после окончания CSS-анимации
                 setTimeout(() => {
                     floatingText.remove();
                 }, 600);
             }
         }
 
-        // Поддержка кликов мыши
+        // Слушатели событий клика на лапку
         clickButton.addEventListener('click', (e) => {
             handleInteraction(e.clientX, e.clientY);
         });
 
-        // Поддержка тач-событий (для мобильных и мультитача)
         clickButton.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Предотвращает дублирующий клик мыши на мобильных
+            e.preventDefault();
             for (let i = 0; i < e.touches.length; i++) {
                 handleInteraction(e.touches[i].clientX, e.touches[i].clientY);
             }
         }, { passive: false });
 
-        // Автоматическое восстановление энергии (по 1 единице в секунду)
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + 1);
-                updateUI();
-            }
-        }, 1000);
-
-        // Первичная отрисовка
-        updateUI();
-    </script>
-            // ... здесь заканчивается прошлый код кликера (функции кликов и таймер энергии) ...
-        
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + 1);
-                updateUI();
-            }
-        }, 1000);
-
-        updateUI();
-
-
-        // === ВСТАВЛЯЙТЕ СЮДА (МЕЖДУ СТАРЫМ КОДОМ И ЗАКРЫВАЮЩИМ </script>) ===
-
-        const navButtons = document.querySelectorAll('.nav-item');
-        const tabs = {
-            0: 'tab-game',
-            1: 'tab-mini-games',
-            2: 'tab-upgrades',
-            3: 'tab-status'
-        };
-
+        // Навигация (переключение вкладок меню)
         function switchTab(activeIndex) {
             navButtons.forEach(btn => btn.classList.remove('active'));
             if (navButtons[activeIndex]) {
                 navButtons[activeIndex].classList.add('active');
             }
 
+            // Скрываем все вкладки
             document.getElementById('tab-game').style.display = 'none';
             document.getElementById('tab-mini-games').style.display = 'none';
             document.getElementById('tab-upgrades').style.display = 'none';
-            
-            const statusTab = document.getElementById('tab-status');
-            if (statusTab) statusTab.style.display = 'none';
+            document.getElementById('tab-status').style.display = 'none';
 
+            // Показываем активную
             const targetTabId = tabs[activeIndex];
             const targetTab = document.getElementById(targetTabId);
-            
             if (targetTab) {
                 targetTab.style.display = 'flex';
             }
         }
 
         navButtons.forEach((button, index) => {
-            button.addEventListener('click', () => {
-                switchTab(index);
-            });
+            button.addEventListener('click', () => switchTab(index));
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 switchTab(index);
             }, { passive: false });
         });
 
-        switchTab(0);
+        // Реализация мини-игры «Кошачья Рулетка»
+        spinBtn.addEventListener('click', () => {
+            if (balance < 50) {
+                rouletteResult.style.color = '#ff416c';
+                rouletteResult.textContent = 'Недостаточно $PURR! Нужно минимум 50.';
+                return;
+            }
+            balance -= 50;
+            const roll = Math.random();
+            if (roll > 0.7) {
+                const prize = 150;
+                balance += prize;
+                rouletteResult.style.color = '#ffd700';
+                rouletteResult.textContent = `🎰 Джекпот! Вы выиграли +${prize} $PURR!`;
+            } else if (roll > 0.3) {
+                const prize = 40;
+                balance += prize;
+                rouletteResult.style.color = '#ffffff';
+                rouletteResult.textContent = `🐱 Обычный прокрут. Вернулось +${prize} $PURR.`;
+            } else {
+                rouletteResult.style.color = '#ff416c';
+                rouletteResult.textContent = '😿 Увы, мимо! Вы ничего не выиграли.';
+            }
+            updateUI();
+        });
 
+        // Реализация Магазина Апгрейдов
+        upgradeBtn.addEventListener('click', () => {
+            if (balance < 100) {
+                alert('Не хватает $PURR для покупки когтей!');
+                return;
+            }
+            balance -= 100;
+            clickValue += 1;
+            updateUI();
+            alert('Когти успешно улучшены! Теперь один тап дает больше $PURR!');
+        });
+
+        // Закрытие WebApp и отправка данных в бот LeadTeh
+        exitWebAppBtn.addEventListener('click', () => {
+            if (tg) {
+                const resultData = JSON.stringify({ score: balance });
+                tg.sendData(resultData); 
+                tg.close(); 
+            } else {
+                alert(`Режим тестирования: отправлено ${balance} $PURR в бот.`);
+            }
+        });
+
+        // Регенерация шкалы ярости (энергии) раз в секунду
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + 1);
+                updateUI();
+            }
+        }, 1000);
+
+        // Первоначальный запуск системы
+        switchTab(0);
+        updateUI();
     </script>
 </body>
 </html>
-
-</body>
-
-
-    <div id="tab-wallet" class="content-panel">
-        <div class="panel-title">🏆 Кошачий Статус</div>
-        <button id="finishBtn" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border: none; color: white; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 16px; width: 100%;">Завершить Тыгыдык и Выйти 🚪</button>
-    </div>
-
-    <div class="navbar">
-        <button id="btn-game" class="nav-item active" onclick="switchTab('game')"> <span class="nav-icon">🎮</span> <span>Тыгыдык</span> </button>
-        <button id="btn-mini-games" class="nav-item" onclick="switchTab('mini-games')"> <span class="nav-icon">🎰</span> <span>Игры</span> </button>
-        <button id="btn-upgrades" class="nav-item" onclick="switchTab('upgrades')"> <span class="nav-icon">🛒</span> <span>Апгрейды</span> </button>
-        <button id="btn-wallet" class="nav-item" onclick="switchTab('wallet')"> <span class="nav-icon">🏆</span> <span>Статус</span> </button>
-    </div>
-
-    <audio id="audioClick" src="https://zvukipro.com" preload="auto"></audio>
-    <audio id="audioCrash" src="https://zvukipro.com" preload="auto"></audio>
-
-    <script>
-        if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-                }
-                let balance = 0;
-                let energy = 100;
-                const maxEnergy = 100;
-                const balanceEl = document.getElementById('balance');
-                const energyBarEl = document.getElementById('energyBar');
-                const energyTextEl = document.getElementById('energyText');
-                const clickButton = document.getElementById('clickButton');
-                const audioClick = document.getElementById('audioClick');
-                const audioCrash = document.getElementById('audioCrash');
-                document.body.addEventListener('click', () => {
-                audioClick.play().then(() => { audioClick.pause(); }).catch(e => console.log(e));
-                audioCrash.play().then(() => { audioCrash.pause(); }).catch(e => console.log(e));
-                }, { once: true });
-                clickButton.addEventListener('click', (e) => {
-                if (energy <= 0) {
-                alert('Кот устал!');
-                return;
-                }
-                balance += 10;
-                energy -= 1;
-                balanceEl.textContent = balance;
-                updateEnergyBar();
-                audioClick.currentTime = 0;
-                audioClick.play().catch(err => console.log("Звук ждет клика"));
-                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-                }
-                createFloatingText(e);
-                });
-                function updateEnergyBar() {
-                const percentage = (energy / maxEnergy) * 100;
-                energyBarEl.style.width = percentage + '%';
-                energyTextEl.textContent = Ярость кота: ${energy}/${maxEnergy};
-                }
-                function createFloatingText(e) {
-                const floating = document.createElement('div');
-                floating.className = 'floating-text';
-                floating.textContent = '+10';
-                let x, y;
-                if (e.changedTouches && e.changedTouches.length > 0) {
-                x = e.changedTouches[0].clientX;
-                y = e.changedTouches[0].clientY;
-                } else {
-                x = e.clientX || window.innerWidth / 2;
-                y = e.clientY || window.innerHeight / 2;
-                }
-                floating.style.left = (x - 20) + 'px';
-                floating.style.top = (y - 30) + 'px';
-                document.body.appendChild(floating);
-                setTimeout(() => { floating.remove(); }, 600);
-                }
-                function switchTab(tabId) {
-                document.getElementById('tab-game').style.display = 'none';
-                document.getElementById('tab-mini-games').style.display = 'none';
-                document.getElementById('tab-upgrades').style.display = 'none';
-                document.getElementById('tab-wallet').style.display = 'none';
-                document.getElementById('btn-game').classList.remove('active');
-                document.getElementById('btn-mini-games').classList.remove('active');
-                document.getElementById('btn-upgrades').classList.remove('active');
-                document.getElementById('btn-wallet').classList.remove('active');
-                if (tabId === 'game') {
-                document.getElementById('tab-game').style.display = 'flex';
-                } else {
-                document.getElementById('tab-' + tabId).style.display = 'flex';
-                }
-                document.getElementById('btn-' + tabId).classList.add('active');
-                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-                }
-                }
-                const spinBtn = document.getElementById('spinBtn');
-                const rouletteResult = document.getElementById('rouletteResult');
-                spinBtn.addEventListener('click', () => {
-                if (balance < 50) {
-                rouletteResult.style.color = '#ff416c';
-                rouletteResult.textContent = 'Недостаточно монет!';
-                return;
-                }
-                balance -= 50;
-                balanceEl.textContent = balance;
-                rouletteResult.textContent = 'Колесо крутится... 🌀';
-                setTimeout(() => {
-                const outcomes = [
-                { text: '🎰 ДЖЕКПОТ! +250 $PURR', win: 250, sound: true },
-                { text: '😼 Украл колбасу: +80 $PURR', win: 80, sound: false },
-                { text: '⚰️ Мимо! +0 $PURR', win: 0, sound: false },
-                { text: '🙀 Получил тапком: -30 $PURR', win: -30, sound: false }
-                ];
-                const result = outcomes[Math.floor(Math.random() * outcomes.length)];
-                balance += result.win;
-                if (balance < 0) balance = 0;
-                balanceEl.textContent = balance;
-                rouletteResult.textContent = result.text;
-                if (result.sound) {
-                audioCrash.currentTime = 0;
-                audioCrash.play().catch(e => console.log(e));
-                }
-                }, 1000);
-                });
-                document.getElementById('finishBtn').addEventListener('click', () => {
-                if (window.Telegram && window.Telegram.WebApp) {
-                const dataToSend = JSON.stringify({ score: balance, event: "finish_game" });
-                window.Telegram.WebApp.sendData(dataToSend);
-                window.Telegram.WebApp.close();
-                } else {
-                alert(Вы вышли из игры. Счет: ${balance});
-                }
-                });
-                setInterval(() => {
-                if (energy < maxEnergy) {
-                energy++;
-                updateEnergyBar();
-                }
-                }, 4000);
