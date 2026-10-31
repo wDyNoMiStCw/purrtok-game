@@ -12,7 +12,6 @@
             padding: 0;
             user-select: none;
             -webkit-user-select: none;
-            /* Полное отключение синего контура выделения на смартфонах и ПК */
             -webkit-tap-highlight-color: transparent; 
             outline: none;
         }
@@ -96,12 +95,12 @@
             width: 100%;
         }
         .circle-button {
-            width: 240px;
-            height: 240px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
-            background: radial-gradient(circle, #3a1c5d 0%, #1a0b36 100%);
-            border: 8px solid #7f56da;
-            box-shadow: 0 0 40px rgba(127, 86, 218, 0.5), inset 0 0 30px rgba(127, 86, 218, 0.3);
+            background: radial-gradient(circle, #4a2574 0%, #1a0b36 100%);
+            border: 6px solid #9d6fff;
+            box-shadow: 0 0 35px rgba(157, 111, 255, 0.4), inset 0 0 25px rgba(157, 111, 255, 0.3);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -109,19 +108,17 @@
             position: relative;
             transition: transform 0.05s ease;
             touch-action: manipulation;
-            -webkit-user-drag: none;
         }
         .circle-button:active {
-            transform: scale(0.95);
-            border-color: #a372ff;
-            box-shadow: 0 0 60px rgba(163, 114, 255, 0.8), inset 0 0 40px rgba(163, 114, 255, 0.5);
+            transform: scale(0.94);
+            border-color: #c2a3ff;
+            box-shadow: 0 0 50px rgba(194, 163, 255, 0.7), inset 0 0 35px rgba(194, 163, 255, 0.5);
         }
-        .cat-image {
-            width: 85%;
-            height: 85%;
-            object-fit: contain;
+        /* Встроенная большая иконка лапки вместо ломающейся картинки */
+        .paw-inner-icon {
+            font-size: 90px;
             pointer-events: none;
-            -webkit-user-drag: none;
+            filter: drop-shadow(0 0 10px rgba(157, 111, 255, 0.6));
         }
         .floating-text {
             position: absolute;
@@ -166,6 +163,7 @@
             box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
             margin-top: 10px;
             transition: transform 0.2s;
+            width: 100%;
         }
         .navbar {
             width: 100%;
@@ -229,9 +227,10 @@
         <div id="energyText" class="energy-text">Ярость кота: 100/100</div>
     </div>
 
+    <!-- Автономная кнопка без внешних картинок -->
     <div id="tab-game" class="clicker-container">
         <div class="circle-button" id="clickButton">
-            <img class="cat-image" src="https://giphy.com" alt="Тапай кота">
+            <span class="paw-inner-icon">🐾</span>
         </div>
     </div>
 
@@ -269,96 +268,115 @@
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand();
-}
-let balance = 0;
-let energy = 100;
-const maxEnergy = 100;
-const balanceEl = document.getElementById('balance');
-const energyBarEl = document.getElementById('energyBar');
-const energyTextEl = document.getElementById('energyText');
-const clickButton = document.getElementById('clickButton');
-clickButton.addEventListener('click', (e) => {
-if (energy <= 0) {
-alert('Кот устал!');
-return;
-}
-balance += 10;
-energy -= 1;
-balanceEl.textContent = balance;
-updateEnergyBar();
-// Безопасный вызов вибрации Telegram (без зависания на ПК)
-if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-}
-createFloatingText(e);
-});
-function updateEnergyBar() {
-const percentage = (energy / maxEnergy) * 100;
-energyBarEl.style.width = percentage + '%';
-energyTextEl.textContent = Ярость кота: ${energy}/${maxEnergy};
-}
-function createFloatingText(e) {
-const floating = document.createElement('div');
-floating.className = 'floating-text';
-floating.textContent = '+10';
-const rect = clickButton.getBoundingClientRect();
-let x = e.clientX || (rect.left + rect.width / 2);
-let y = e.clientY || (rect.top + rect.height / 2);
-floating.style.left = (x - 20) + 'px';
-floating.style.top = (y - 20) + 'px';
-document.body.appendChild(floating);
-setTimeout(() => { floating.remove(); }, 600);
-}
-function switchTab(tabId) {
-document.getElementById('tab-game').style.display = 'none';
-document.getElementById('tab-mini-games').style.display = 'none';
-document.getElementById('tab-upgrades').style.display = 'none';
-document.getElementById('tab-wallet').style.display = 'none';
-document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-if (tabId === 'game') {
-document.getElementById('tab-game').style.display = 'flex';
-} else {
-document.getElementById(tab-${tabId}).style.display = 'flex';
-}
-event.currentTarget.classList.add('active');
-}
-const spinBtn = document.getElementById('spinBtn');
-const rouletteResult = document.getElementById('rouletteResult');
-spinBtn.addEventListener('click', () => {
-if (balance < 50) {
-rouletteResult.style.color = '#ff416c';
-rouletteResult.textContent = 'Недостаточно монет!';
-return;
-}
-balance -= 50;
-balanceEl.textContent = balance;
-rouletteResult.textContent = 'Колесо крутится... 🌀';
-setTimeout(() => {
-const outcomes = [
-{ text: '🎰 ДЖЕКПОТ! +250 $PURR', win: 250 },
-{ text: '😼 Украл колбасу: +80 $PURR', win: 80 },
-{ text: '⚰️ Мимо! +0 $PURR', win: 0 },
-{ text: '🙀 Получил тапком: -30 $PURR', win: -30 }
-];
-const result = outcomes[Math.floor(Math.random() * outcomes.length)];
-balance += result.win;
-if (balance < 0) balance = 0;
-balanceEl.textContent = balance;
-rouletteResult.textContent = result.text;
-}, 1000);
-});
-document.getElementById('finishBtn').addEventListener('click', () => {
-if (window.Telegram && window.Telegram.WebApp) {
-const dataToSend = JSON.stringify({ score: balance, event: "finish_game" });
-window.Telegram.WebApp.sendData(dataToSend);
-window.Telegram.WebApp.close();
-} else {
-alert(Вы вышли из игры. Счет: ${balance});
-}
-});
-setInterval(() => {
-if (energy < maxEnergy) {
-energy++;
-updateEnergyBar();
-}
-}, 4000);
+        }
+
+        let balance = 0;
+        let energy = 100;
+        const maxEnergy = 100;
+
+        const balanceEl = document.getElementById('balance');
+        const energyBarEl = document.getElementById('energyBar');
+        const energyTextEl = document.getElementById('energyText');
+        const clickButton = document.getElementById('clickButton');
+        
+        clickButton.addEventListener('click', (e) => {
+            if (energy <= 0) {
+                alert('Кот устал!');
+                return;
+            }
+            balance += 10;
+            energy -= 1;
+            balanceEl.textContent = balance;
+            updateEnergyBar();
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            }
+            createFloatingText(e);
+        });
+        
+        function updateEnergyBar() {
+            const percentage = (energy / maxEnergy) * 100;
+            energyBarEl.style.width = percentage + '%';
+            energyTextEl.textContent = `Ярость кота: ${energy}/${maxEnergy}`;
+        }
+        
+        function createFloatingText(e) {
+            const floating = document.createElement('div');
+            floating.className = 'floating-text';
+            floating.textContent = '+10';
+            
+            // Получаем координаты клика мыши или тапа по экрану телефона
+            let x, y;
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                x = e.changedTouches[0].clientX;
+                y = e.changedTouches[0].clientY;
+            } else {
+                x = e.clientX;
+                y = e.clientY;
+            }
+            
+            floating.style.left = (x - 20) + 'px';
+            floating.style.top = (y - 30) + 'px';
+            document.body.appendChild(floating);
+            setTimeout(() => { floating.remove(); }, 600);
+        }
+        
+        function switchTab(tabId) {
+            document.getElementById('tab-game').style.display = 'none';
+            document.getElementById('tab-mini-games').style.display = 'none';
+            document.getElementById('tab-upgrades').style.display = 'none';
+            document.getElementById('tab-wallet').style.display = 'none';
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            if (tabId === 'game') {
+                document.getElementById('tab-game').style.display = 'flex';
+            } else {
+                document.getElementById(`tab-${tabId}`).style.display = 'flex';
+            }
+            event.currentTarget.classList.add('active');
+        }
+        
+        const spinBtn = document.getElementById('spinBtn');
+        const rouletteResult = document.getElementById('rouletteResult');
+        
+        spinBtn.addEventListener('click', () => {
+            if (balance < 50) {
+                rouletteResult.style.color = '#ff416c';
+                rouletteResult.textContent = 'Недостаточно монет!';
+                return;
+            }
+            balance -= 50;
+            balanceEl.textContent = balance;
+            rouletteResult.textContent = 'Колесо крутится... 🌀';
+            
+            setTimeout(() => {
+                const outcomes = [
+                    { text: '🎰 ДЖЕКПОТ! +250 $PURR', win: 250 },
+                    { text: '😼 Украл колбасу: +80 $PURR', win: 80 },
+                    { text: '⚰️ Мимо! +0 $PURR', win: 0 },
+                    { text: '🙀 Получил тапком: -30 $PURR', win: -30 }
+                ];
+                const result = outcomes[Math.floor(Math.random() * outcomes.length)];
+                balance += result.win;
+                if (balance < 0) balance = 0;
+                balanceEl.textContent = balance;
+                rouletteResult.textContent = result.text;
+            }, 1000);
+        });
+        
+        document.getElementById('finishBtn').addEventListener('click', () => {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const dataToSend = JSON.stringify({ score: balance, event: "finish_game" });
+                window.Telegram.WebApp.sendData(dataToSend);
+                window.Telegram.WebApp.close();
+            } else {
+                alert(`Вы вышли из игры. Счет: ${balance}`);
+            }
+        });
+        
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy++;
+                updateEnergyBar();
+            }
+        }, 4000);
