@@ -272,6 +272,84 @@
             <button style="background: #7f56da; border: none; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px;">150 $PURR</button>
         </div>
     </div>
+        <script>
+        // Инициализация игровых переменных
+        let balance = 0;
+        let energy = 100;
+        const maxEnergy = 100;
+        const clickValue = 1;
+
+        // Поиск DOM-элементов
+        const balanceEl = document.getElementById('balance');
+        const energyBarEl = document.getElementById('energyBar');
+        const energyTextEl = document.getElementById('energyText');
+        const clickButton = document.getElementById('clickButton');
+        const gameContainer = document.getElementById('tab-game');
+
+        // Функция обновления UI
+        function updateUI() {
+            balanceEl.textContent = balance;
+            const energyPercent = (energy / maxEnergy) * 100;
+            energyBarEl.style.width = `${energyPercent}%`;
+            energyTextEl.textContent = `Ярость кота: ${energy}/${maxEnergy}`;
+        }
+
+        // Логика обработки клика
+        function handleInteraction(clientX, clientY) {
+            if (energy >= clickValue) {
+                // Изменение состояния
+                balance += clickValue;
+                energy -= clickValue;
+                updateUI();
+
+                // Создание вылетающего текста +1
+                const floatingText = document.createElement('div');
+                floatingText.className = 'floating-text';
+                floatingText.textContent = `+${clickValue}`;
+                
+                // Расчет координат появления цифры относительно контейнера
+                const rect = gameContainer.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                
+                floatingText.style.left = `${x}px`;
+                floatingText.style.top = `${y}px`;
+
+                gameContainer.appendChild(floatingText);
+
+                // Удаление элемента после окончания CSS-анимации
+                setTimeout(() => {
+                    floatingText.remove();
+                }, 600);
+            }
+        }
+
+        // Поддержка кликов мыши
+        clickButton.addEventListener('click', (e) => {
+            handleInteraction(e.clientX, e.clientY);
+        });
+
+        // Поддержка тач-событий (для мобильных и мультитача)
+        clickButton.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Предотвращает дублирующий клик мыши на мобильных
+            for (let i = 0; i < e.touches.length; i++) {
+                handleInteraction(e.touches[i].clientX, e.touches[i].clientY);
+            }
+        }, { passive: false });
+
+        // Автоматическое восстановление энергии (по 1 единице в секунду)
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + 1);
+                updateUI();
+            }
+        }, 1000);
+
+        // Первичная отрисовка
+        updateUI();
+    </script>
+</body>
+
 
     <div id="tab-wallet" class="content-panel">
         <div class="panel-title">🏆 Кошачий Статус</div>
