@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PurrTok Kombat</title>
-    <!-- Официальный скрипт Telegram Mini App -->
     <script src="https://telegram.org"></script>
     <style>
         * {
@@ -13,6 +12,9 @@
             padding: 0;
             user-select: none;
             -webkit-user-select: none;
+            /* Полное отключение синего контура выделения на смартфонах и ПК */
+            -webkit-tap-highlight-color: transparent; 
+            outline: none;
         }
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -26,7 +28,6 @@
             justify-content: space-between;
             padding: 20px 10px;
         }
-        /* Шапка с балансом и яростью */
         .header {
             width: 100%;
             max-width: 400px;
@@ -86,7 +87,6 @@
             font-weight: 600;
             text-align: right;
         }
-        /* Главная кнопка-тапалка */
         .clicker-container {
             position: relative;
             display: flex;
@@ -109,6 +109,7 @@
             position: relative;
             transition: transform 0.05s ease;
             touch-action: manipulation;
+            -webkit-user-drag: none;
         }
         .circle-button:active {
             transform: scale(0.95);
@@ -120,8 +121,8 @@
             height: 85%;
             object-fit: contain;
             pointer-events: none;
+            -webkit-user-drag: none;
         }
-        /* Анимированный текст +10 */
         .floating-text {
             position: absolute;
             font-size: 28px;
@@ -132,7 +133,6 @@
             animation: floatUp 0.6s ease-out forwards;
             z-index: 100;
         }
-        /* Контентные панели вкладок */
         .content-panel {
             width: 100%;
             max-width: 400px;
@@ -167,18 +167,6 @@
             margin-top: 10px;
             transition: transform 0.2s;
         }
-        .roulette-btn:active {
-            transform: scale(0.98);
-        }
-        .roulette-result {
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 10px;
-            color: #00ffcc;
-            min-height: 24px;
-        }
-        /* Нижнее меню навигации (Navbar) */
         .navbar {
             width: 100%;
             max-width: 400px;
@@ -228,7 +216,6 @@
 </head>
 <body>
 
-    <!-- Шапка игры -->
     <div class="header">
         <div class="title">PurrTok Kombat</div>
         <div class="balance-container">
@@ -242,35 +229,136 @@
         <div id="energyText" class="energy-text">Ярость кота: 100/100</div>
     </div>
 
-    <!-- Экран тапалки -->
     <div id="tab-game" class="clicker-container">
         <div class="circle-button" id="clickButton">
-            <img class="cat-image" src="media/gifs/cat_start.gif" onerror="this.src='https://giphy.com'" alt="Тапай кота">
+            <img class="cat-image" src="https://giphy.com" alt="Тапай кота">
         </div>
     </div>
 
-    <!-- Вкладка: Игры -->
     <div id="tab-mini-games" class="content-panel">
         <div class="panel-title">🎰 Кошачья Рулетка</div>
-        <p style="font-size: 13px; color: #a5a1b8;">Испытай кошачью удачу! Стоимость прокрута: 50 $PURR.</p>
+        <p style="font-size: 13px; color: #a5a1b8;">Стоимость прокрута: 50 $PURR.</p>
         <button class="roulette-btn" id="spinBtn">Крутить колесо! 🎡</button>
         <div class="roulette-result" id="rouletteResult"></div>
     </div>
 
-    <!-- Вкладка: Апгрейды -->
     <div id="tab-upgrades" class="content-panel">
-        <div class="panel-title">🛒 Магазин Апгрейдов Пакостей</div>
-        <p style="font-size: 13px; color: #a5a1b8; margin-bottom: 10px;">Прокачивай навыки разрушения!</p>
+        <div class="panel-title">🛒 Магазин Апгрейдов</div>
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <div style="font-weight: bold; font-size: 14px;">😼 Острые когти</div>
-                <div style="font-size: 11px; color: #8e8a9f;">+20 монет за тап. Испортишь диван быстрее!</div>
+                <div style="font-size: 11px; color: #8e8a9f;">+20 монет за тап.</div>
             </div>
             <button style="background: #7f56da; border: none; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px;">150 $PURR</button>
         </div>
     </div>
 
-    <!-- Вкладка: Финал -->
     <div id="tab-wallet" class="content-panel">
         <div class="panel-title">🏆 Кошачий Статус</div>
-        <p style="font-size: 13px; color: #a5a1b8; margin-bottom: 15px;">Зафиксируй результат, чтобы получить статус-мем от бота в чате!</p>
+        <button id="finishBtn" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border: none; color: white; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 16px; width: 100%;">Завершить Тыгыдык и Выйти 🚪</button>
+    </div>
+
+    <div class="navbar">
+        <button class="nav-item active" onclick="switchTab('game')"> <span class="nav-icon">🎮</span> <span>Тыгыдык</span> </button>
+        <button class="nav-item" onclick="switchTab('mini-games')"> <span class="nav-icon">🎰</span> <span>Игры</span> </button>
+        <button class="nav-item" onclick="switchTab('upgrades')"> <span class="nav-icon">🛒</span> <span>Апгрейды</span> </button>
+        <button class="nav-item" onclick="switchTab('wallet')"> <span class="nav-icon">🏆</span> <span>Статус</span> </button>
+    </div>
+
+    <script>
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+}
+let balance = 0;
+let energy = 100;
+const maxEnergy = 100;
+const balanceEl = document.getElementById('balance');
+const energyBarEl = document.getElementById('energyBar');
+const energyTextEl = document.getElementById('energyText');
+const clickButton = document.getElementById('clickButton');
+clickButton.addEventListener('click', (e) => {
+if (energy <= 0) {
+alert('Кот устал!');
+return;
+}
+balance += 10;
+energy -= 1;
+balanceEl.textContent = balance;
+updateEnergyBar();
+// Безопасный вызов вибрации Telegram (без зависания на ПК)
+if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+}
+createFloatingText(e);
+});
+function updateEnergyBar() {
+const percentage = (energy / maxEnergy) * 100;
+energyBarEl.style.width = percentage + '%';
+energyTextEl.textContent = Ярость кота: ${energy}/${maxEnergy};
+}
+function createFloatingText(e) {
+const floating = document.createElement('div');
+floating.className = 'floating-text';
+floating.textContent = '+10';
+const rect = clickButton.getBoundingClientRect();
+let x = e.clientX || (rect.left + rect.width / 2);
+let y = e.clientY || (rect.top + rect.height / 2);
+floating.style.left = (x - 20) + 'px';
+floating.style.top = (y - 20) + 'px';
+document.body.appendChild(floating);
+setTimeout(() => { floating.remove(); }, 600);
+}
+function switchTab(tabId) {
+document.getElementById('tab-game').style.display = 'none';
+document.getElementById('tab-mini-games').style.display = 'none';
+document.getElementById('tab-upgrades').style.display = 'none';
+document.getElementById('tab-wallet').style.display = 'none';
+document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+if (tabId === 'game') {
+document.getElementById('tab-game').style.display = 'flex';
+} else {
+document.getElementById(tab-${tabId}).style.display = 'flex';
+}
+event.currentTarget.classList.add('active');
+}
+const spinBtn = document.getElementById('spinBtn');
+const rouletteResult = document.getElementById('rouletteResult');
+spinBtn.addEventListener('click', () => {
+if (balance < 50) {
+rouletteResult.style.color = '#ff416c';
+rouletteResult.textContent = 'Недостаточно монет!';
+return;
+}
+balance -= 50;
+balanceEl.textContent = balance;
+rouletteResult.textContent = 'Колесо крутится... 🌀';
+setTimeout(() => {
+const outcomes = [
+{ text: '🎰 ДЖЕКПОТ! +250 $PURR', win: 250 },
+{ text: '😼 Украл колбасу: +80 $PURR', win: 80 },
+{ text: '⚰️ Мимо! +0 $PURR', win: 0 },
+{ text: '🙀 Получил тапком: -30 $PURR', win: -30 }
+];
+const result = outcomes[Math.floor(Math.random() * outcomes.length)];
+balance += result.win;
+if (balance < 0) balance = 0;
+balanceEl.textContent = balance;
+rouletteResult.textContent = result.text;
+}, 1000);
+});
+document.getElementById('finishBtn').addEventListener('click', () => {
+if (window.Telegram && window.Telegram.WebApp) {
+const dataToSend = JSON.stringify({ score: balance, event: "finish_game" });
+window.Telegram.WebApp.sendData(dataToSend);
+window.Telegram.WebApp.close();
+} else {
+alert(Вы вышли из игры. Счет: ${balance});
+}
+});
+setInterval(() => {
+if (energy < maxEnergy) {
+energy++;
+updateEnergyBar();
+}
+}, 4000);
